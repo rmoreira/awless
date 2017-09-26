@@ -10,6 +10,30 @@ import (
 	"github.com/wallix/awless/template/internal/ast"
 )
 
+func TestGetStatsFromTemplateExecution(t *testing.T) {
+	tplExec := &TemplateExecution{}
+	if err := tplExec.UnmarshalJSON([]byte(`{
+		"commands": [
+			{"line": "create vpc"},
+			{"line": "create subnet"},
+			{"line": "create instance"},
+			{"line": "create instance"},
+			{"line": "create instance"},
+			{"line": "create subnet"},
+			{"line": "attach policy"},
+			{"line": "stop instance"},
+			{"line": "detach policy"}
+		]}`)); err != nil {
+		t.Fatal(err)
+	}
+	expected := map[string]int{
+		"create instance": 3, "create vpc": 1, "create subnet": 2, "attach policy": 1, "stop instance": 1, "detach policy": 1,
+	}
+	if got, want := tplExec.Stats(), expected; !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+}
+
 func TestTemplateExecutionUnmarshalFromJSON(t *testing.T) {
 	tplExec := &TemplateExecution{}
 	err := tplExec.UnmarshalJSON([]byte(`{
